@@ -171,25 +171,141 @@ router.post("/:id/comments",(req,res)=>{
           .json({error: "There was an error while saving the comment to the database"});
       });
 
-
-
   }
-
-
-
-
-
-
-
-
-
-
 })
 
 
 
 
+// ******************************************************************
+// DELETE  /api/posts/:id
+// Removes the post with the specified id and returns the deleted post object.
+router.delete("/:id",(req,res)=>{
+  const id = req.params.id;
+
+  db.findById(id)
+    .then(post=>{
+
+      if(post.length===0) {
+        res.status(404)
+          .json({message: "The post with the specified ID does not exist."});
+      }
+      else {
+        db.remove(id)
+          .then(count=>{
+
+            if(count===0) {
+              console.log("Error in db.remove in DELETE  /api/posts/:id");
+              res.status(500)
+                .json({error: "The post could not be removed"});
+            }
+            else {
+              res.status(200).json(post);
+            }
+
+          })
+          .catch(err=>{
+            console.log("Error in db.remove in DELETE  /api/posts/:id");
+            res.status(500)
+              .json({error: "The post could not be removed"});
+          });
+      }
+
+    })
+    .catch(err=>{
+      console.log("Error in db.findById in DELETE  /api/posts/:id");
+      res.status(500)
+        .json({error: "The post could not be removed"});
+    })
+}) // End of router.delete
 
 
+// ******************************************************************
+//PUT  /api/posts/:id
+//Removes the post with the specified id and returns the deleted post object.
+router.put("/:id",(req,res)=>{
+  const body = req.body;
+  const id = req.params.id;
+
+  if(!body.title||!body.contents) {
+    res.status(400)
+      .json({ errorMessage: "Please provide title and contents for the post." });
+  }
+  else {
+    db.findById(id)
+      .then(postCheck=>{
+
+        if(postCheck.length===0) {
+          res.status(404)
+            .json({message: "The post with the specified ID does not exist."});
+        }
+        else {
+
+          db.update(id,body)
+            .then(count=>{
+
+              if(count===0) {
+                console.log("Error in db.update in PUT /api/posts/:id");
+                res.status(500)
+                .json({error: "The post information could not be modified  XX."});
+              }
+              else {
+
+                db.findById(id)
+                  .then(post=>{
+
+                    if(post.length===0) {
+                      console.log("Error in db.findById-2nd-one in PUT /api/posts/:id");
+                      res.status(500)
+                      .json({error: "The post information was modified but could not be retrieved afterwards."});
+                    }
+                    else {
+                      res.status(200).json(post);
+                    }
+
+
+                  })
+                  .catch(err=>{
+                    console.log("Error in db.findById-2nd-one in PUT /api/posts/:id");
+                    res.status(500)
+                      .json({error: "The post information was modified but could not be retrieved afterwards."});
+                  })
+
+              }
+
+            })
+            .catch(err=>{
+              console.log("Error in db.update in PUT /api/posts/:id");
+              res.status(500)
+                .json({error: "The post information could not be modified YY."});
+            }); 
+
+        }
+
+      })
+      .catch(err=>{
+        console.log("Error in db.findById in PUT /api/posts/:id");
+        res.status(500)
+          .json({error: "The post information could not be modified."});
+      });
+  }
+}) // End of router.put
+
+
+// router.put("/:id",(req,res)=>{
+//   const body = req.body;
+//   const id = req.params.id;
+
+//   db.update(id,body)
+//     .then(count=>{
+//       console.log("This is count in update in PUT:",count);
+//     })
+//     .catch(err=>{
+//       console.log("Error in db.update in PUT /api/posts/:id");
+//       res.status(500)
+//         .json({error: "The post information could not be modified."});
+//     })
+
+// }) // End of router.put
 
 module.exports = router;
